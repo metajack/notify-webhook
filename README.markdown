@@ -8,6 +8,10 @@ API](http://github.com/guides/post-receive-hooks) as closely as
 possible.  It allows arbitrary git repositories to use Web hook
 capable services.
 
+As an example, this script works very well with
+[commitbot](http://github.com/metajack/commitbot/tree/master) which
+sends commit notifications to XMPP group chat rooms.
+
 ## License
 
 This code is copyright (c) 2008 by Jack Moffitt <jack@metajack.im> and
