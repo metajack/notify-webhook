@@ -18,34 +18,23 @@ REPO_DESC = ''
 
 def get_revisions(old, new):
     git = subprocess.Popen(['git-rev-list', '--pretty=medium', '%s..%s' % (old, new)], stdout=subprocess.PIPE)
-    results = git.stdout.read().split('\0')
+    sections = git.stdout.read().split('\n\n')[:-1]
 
     revisions = []
-    for r in results:
-	lines = r.split('\n')
-	
+    s = 0
+    while s < len(sections):
+	lines = sections[s].split('\n')
+	    
 	# first line is 'commit HASH\n'
 	props = {'id': lines[0].strip().split(' ')[1]}
-	
+	    
 	# read the header
-	for l in range(1, len(lines)):
-	    if lines[l] == '': 
-		break
-
-	    key, val = lines[l].split(' ', 1)
+	for l in lines[1:]:
+	    key, val = l.split(' ', 1)
 	    props[key[:-1].lower()] = val.strip()
 
 	# read the commit message
-	l += 1
-	msg = []
-	while l < len(lines):
-	    # each line in medium pretty mode starts with four spaces
-	    msg.append(lines[l][4:])
-	    msg.append('\n')
-
-	    l += 1
-	# need to take off extra newlines at the end
-	props['message'] = ''.join(msg)[:-3]
+	props['message'] = sections[s+1]
 
 	# use github time format
 	basetime = datetime.strptime(props['date'][:-6], "%a %b %d %H:%M:%S %Y")
@@ -59,6 +48,7 @@ def get_revisions(old, new):
 	del props['author']
 	
 	revisions.append(props)
+	s += 2
 	
     return revisions
 
