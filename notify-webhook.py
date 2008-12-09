@@ -2,6 +2,7 @@
 
 import sys
 import urllib, urllib2
+import re
 import subprocess
 from datetime import datetime
 import simplejson as json
@@ -14,6 +15,9 @@ REPO_NAME = 'gitrepo'
 REPO_OWNER_NAME = 'Git U. Some'
 REPO_OWNER_EMAIL = 'git@example.com'
 REPO_DESC = ''
+
+
+EMAIL_RE = re.compile("^(.*) <(.*)>$")
 
 
 def get_revisions(old, new):
@@ -42,9 +46,13 @@ def get_revisions(old, new):
 	props['date'] = basetime.strftime('%Y-%m-%dT%H:%M:%S') + tzstr
 
 	# split up author
-	parts = props['author'].split(' ')
-	props['name'] = ' '.join(parts[:2])
-	props['email'] = parts[2][1:-1]
+	m = EMAIL_RE.match(props['author'])
+	if m:
+	    props['name'] = m.group(1)
+	    props['email'] = m.group(2)
+	else:
+	    props['name'] = 'unknown'
+	    props['email'] = 'unknown'
 	del props['author']
 	
 	revisions.append(props)
