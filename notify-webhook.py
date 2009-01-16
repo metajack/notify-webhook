@@ -21,7 +21,7 @@ EMAIL_RE = re.compile("^(.*) <(.*)>$")
 
 
 def get_revisions(old, new):
-    git = subprocess.Popen(['git-rev-list', '--pretty=medium', '%s..%s' % (old, new)], stdout=subprocess.PIPE)
+    git = subprocess.Popen(['git', 'rev-list', '--pretty=medium', '%s..%s' % (old, new)], stdout=subprocess.PIPE)
     sections = git.stdout.read().split('\n\n')[:-1]
 
     revisions = []
