@@ -4,7 +4,7 @@ notify-webhook is a [git](http://git.or.cz) post-receive hook script
 that posts JSON data to a web hook capable server.
 
 This implements the [GitHub](http://github.com) [Web hooks
-API](http://github.com/guides/post-receive-hooks) as closely as
+API](http://help.github.com/post-receive-hooks/) as closely as
 possible.  It allows arbitrary git repositories to use Web hook
 capable services.
 
