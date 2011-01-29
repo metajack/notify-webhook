@@ -18,7 +18,7 @@ REPO_DESC = ''
 
 
 EMAIL_RE = re.compile("^(.*) <(.*)>$")
-
+DIFF_TREE_RE = re.compile("^:(?P<src_mode>[0-9]{6}) (?P<dst_mode>[0-9]{6}) (?P<src_hash>[0-9a-f]{7,40}) (?P<dst_hash>[0-9a-f]{7,40}) (?P<status>[ADMTUX]|[CR][0-9]{1,3})\s+(?P<file1>\S+)(?:\s+(?P<file2>\S+))?$", re.MULTILINE)
 
 def get_revisions(old, new):
     git = subprocess.Popen(['git', 'rev-list', '--pretty=medium', '%s..%s' % (old, new)], stdout=subprocess.PIPE)
@@ -30,7 +30,30 @@ def get_revisions(old, new):
         lines = sections[s].split('\n')
         
         # first line is 'commit HASH\n'
-        props = {'id': lines[0].strip().split(' ')[1]}
+        props = {'id': lines[0].strip().split(' ')[1], 'added': [], 'removed': [], 'modified': []}
+        
+        # Call git diff-tree and get the added/moded/removed files
+        git_difftree = subprocess.Popen(['git', 'diff-tree', '-r', '-C', '%s' % props['id']], stdout=subprocess.PIPE)
+        output = git_difftree.stdout.read()
+        
+        for i in DIFF_TREE_RE.finditer(output):
+            item = i.groupdict()
+            if item['status'] == 'A':      # addition of a file
+                props['added'].append(item['file1'])
+            elif item['status'][0] == 'C': # copy of a file into a new one
+                props['added'].append(item['file2'])
+            elif item['status'] == 'D':    # deletion of a file
+                props['removed'].append(item['file1'])
+            elif item['status'] == 'M':    # modification of the contents or mode of a file
+                props['modified'].append(item['file1'])
+            elif item['status'][0] == 'R': # renaming of a file
+                props['removed'].append(item['file1'])
+                props['added'].append(item['file2'])
+            elif item['status'] == 'T':    # change in the type of the file
+                props['modified'].append(item['file1'])
+            else: # Covers U (file is unmerged) and X ("unknown" change type, usually an error
+                pass # We shouldn't be seeing U. When we get X be do not know what actually happened
+                     # so it's safest just to ignore it.
         
         # read the header
         for l in lines[1:]:
@@ -83,7 +106,10 @@ def make_json(old, new, ref):
                         'author': {'name': r['name'], 'email': r['email']},
                         'url': COMMIT_URL % r['id'],
                         'message': r['message'],
-                        'timestamp': r['date']
+                        'timestamp': r['date'],
+                        'added': r['added'],
+                        'removed': r['removed'],
+                        'modified': r['modified']
                         })
     data['commits'] = commits
     
