@@ -11,6 +11,7 @@ import simplejson as json
 POST_URL = 'http://example.com'
 REPO_URL = 'http://example.com'
 COMMIT_URL = r'http://example.com/commit/%s'
+COMPARE_URL = r'http://exmaple.com/compare/%s..%s'
 REPO_NAME = 'gitrepo'
 REPO_OWNER_NAME = 'Git U. Some'
 REPO_OWNER_EMAIL = 'git@example.com'
@@ -91,6 +92,7 @@ def make_json(old, new, ref):
         'before': old,
         'after': new,
         'ref': ref,
+        'compare': COMPARE_URL % (old, new),
         'repository': {
             'url': REPO_URL,
             'name': REPO_NAME,
