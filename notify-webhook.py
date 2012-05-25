@@ -24,7 +24,10 @@ def get_config(key):
 
 def get_repo_name():
     if git(['rev-parse','--is-bare-repository']) == 'true':
-        return os.path.basename(os.getcwd())
+        name = os.path.basename(os.getcwd())
+        if name.endswith('.git'):
+            name = name[:-4]
+        return name
     else:
         return os.path.basename(os.path.dirname(os.getcwd()))
 
