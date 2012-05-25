@@ -37,7 +37,11 @@ COMMIT_URL = get_config('meta.commiturl')
 if COMMIT_URL == None and REPO_URL != None:
     COMMIT_URL = REPO_URL + r'/commit/%s'
 REPO_NAME = get_repo_name()
-REPO_DESC = get_config('meta.description') or open('description', 'r').read()
+REPO_DESC = ""
+try:
+    REPO_DESC = get_config('meta.description') or open('description', 'r').read()
+except Exception:
+    pass
 REPO_OWNER_NAME = get_config('meta.ownername')
 REPO_OWNER_EMAIL = get_config('meta.owneremail')
 if REPO_OWNER_NAME is None:
