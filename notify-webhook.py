@@ -64,10 +64,11 @@ def get_revisions(old, new):
         # first line is 'commit HASH\n'
         props = {'id': lines[0].strip().split(' ')[1], 'added': [], 'removed': [], 'modified': []}
 
-        # Call git diff-tree and get the added/moded/removed files
+        # call git diff-tree and get the file changes
         git_difftree = subprocess.Popen(['git', 'diff-tree', '-r', '-C', '%s' % props['id']], stdout=subprocess.PIPE)
         output = git_difftree.stdout.read()
 
+        # sort the changes into the added/modified/removed lists
         for i in DIFF_TREE_RE.finditer(output):
             item = i.groupdict()
             if item['status'] == 'A':      # addition of a file
@@ -83,9 +84,11 @@ def get_revisions(old, new):
                 props['added'].append(item['file2'])
             elif item['status'] == 'T':    # change in the type of the file
                  props['modified'].append(item['file1'])
-            else: # Covers U (file is unmerged) and X ("unknown" change type, usually an error
-                pass # We shouldn't be seeing U. When we get X be do not know what actually happened
-                 # so it's safest just to ignore it.
+            else:   # Covers U (file is unmerged)
+                    # and X ("unknown" change type, usually an error)
+                pass    # When we get X, we do not know what actually happened so
+                        # it's safest just to ignore it. We shouldn't be seeing U
+                        # anyway, so we can ignore that too.
 
         # read the header
         for l in lines[1:]:
