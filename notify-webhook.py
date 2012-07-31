@@ -102,6 +102,32 @@ def get_revisions(old, new, head_commit=False):
 
     return revisions
 
+def get_base_ref(commit, ref):
+    branches = git(['branch', '--contains', commit]).split('\n')
+    CURR_BRANCH_RE = re.compile('^\* \w+$')
+    curr_branch = None
+
+    if len(branches) > 1:
+        on_master = False
+        for branch in branches:
+            if CURR_BRANCH_RE.match(branch):
+                curr_branch = branch.strip('* \n')
+            elif branch.strip() == 'master':
+                on_master = True
+
+        if curr_branch is None and on_master:
+            curr_branch = 'master'
+
+    if curr_branch is None:
+        curr_branch = branches[0].strip('* \n')
+
+    base_ref = 'refs/heads/%s' % curr_branch
+
+    if base_ref == ref:
+        return None
+    else:
+        return base_ref
+
 def make_json(old, new, ref):
     data = {
         'before': old,
@@ -132,6 +158,10 @@ def make_json(old, new, ref):
                         })
     data['commits'] = commits
     data['head_commit'] = get_revisions(old, new, True)
+
+    base_ref = get_base_ref(new, ref)
+    if base_ref:
+        data['base_ref'] = base_ref
 
     return json.dumps(data)
 
