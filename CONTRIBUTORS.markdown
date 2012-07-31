@@ -1,2 +1,3 @@
  - [Jack Moffitt](http://metajack.im/)
  - [Benjie Gillam](http://www.benjiegillam.com/)
+ - [Vojta Grec](http://www.easysoftware.cz/)
