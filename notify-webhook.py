@@ -51,8 +51,16 @@ if REPO_OWNER_EMAIL is None:
 
 EMAIL_RE = re.compile("^(.*) <(.*)>$")
 
-def get_revisions(old, new):
-    git = subprocess.Popen(['git', 'rev-list', '--pretty=medium', '--reverse', '%s..%s' % (old, new)], stdout=subprocess.PIPE)
+def get_revisions(old, new, head_commit=False):
+    if re.match("^0+$", old):
+        if not head_commit:
+            return []
+
+        commit_range = '%s~1..%s' % (new, new)
+    else:
+        commit_range = '%s..%s' % (old, new)
+        
+    git = subprocess.Popen(['git', 'rev-list', '--pretty=medium', '--reverse', commit_range], stdout=subprocess.PIPE)
     sections = git.stdout.read().split('\n\n')[:-1]
 
     revisions = []
@@ -85,6 +93,9 @@ def get_revisions(old, new):
             props['name'] = 'unknown'
             props['email'] = 'unknown'
         del props['author']
+
+        if head_commit:
+            return props
 
         revisions.append(props)
         s += 2
@@ -120,6 +131,7 @@ def make_json(old, new, ref):
                         'timestamp': r['date']
                         })
     data['commits'] = commits
+    data['head_commit'] = get_revisions(old, new, True)
 
     return json.dumps(data)
 
