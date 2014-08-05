@@ -70,6 +70,7 @@ Username to use for basic authentication.
 
 #### hooks.authpass
 Password to use for basic authentication.
+Note that it is stored in plaintext in git's config file!
 
 ## License
 
