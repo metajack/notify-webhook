@@ -65,6 +65,12 @@ Description of the repo.
 
 Defaults to the contents of the "description" file.
 
+#### hooks.authuser
+Username to use for basic authentication.
+
+#### hooks.authpass
+Password to use for basic authentication.
+
 ## License
 
 This code is copyright (c) 2008 by Jack Moffitt <jack@metajack.im> and
