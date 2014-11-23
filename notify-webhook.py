@@ -129,12 +129,12 @@ def make_json(old, new, ref):
 def post(url, data):
     if POST_USER is not None or POST_PASS is not None:
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        password_mgr.add_password(None, POST_URL, POST_USER, POST_PASS)
+        password_mgr.add_password(None, url, POST_USER, POST_PASS)
         handler = urllib2.HTTPBasicAuthHandler(password_mgr)
         opener = urllib2.build_opener(handler)
-        u = opener.open(POST_URL, urllib.urlencode({'payload': data}))
+        u = opener.open(url, urllib.urlencode({'payload': data}))
     else:
-        u = urllib2.urlopen(POST_URL, urllib.urlencode({'payload': data}))
+        u = urllib2.urlopen(url, urllib.urlencode({'payload': data}))
     u.read()
     u.close()
 
