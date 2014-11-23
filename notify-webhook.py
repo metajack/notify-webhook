@@ -15,12 +15,12 @@ def git(args):
     details = details.strip()
     return details
 
-def get_config(key):
+def get_config(key, default=None):
     details = git(['config', '%s' % (key)])
     if len(details) > 0:
         return details
     else:
-        return None
+        return default
 
 def get_repo_name():
     if git(['rev-parse','--is-bare-repository']) == 'true':
@@ -34,6 +34,7 @@ def get_repo_name():
 POST_URL = get_config('hooks.webhookurl')
 POST_USER = get_config('hooks.authuser')
 POST_PASS = get_config('hooks.authpass')
+POST_CONTENTTYPE = get_config('hooks.webhook-contenttype', 'application/x-www-form-urlencoded')
 REPO_URL = get_config('meta.url')
 COMMIT_URL = get_config('meta.commiturl')
 if COMMIT_URL == None and REPO_URL != None:
@@ -127,14 +128,18 @@ def make_json(old, new, ref):
 
 
 def post(url, data):
+    if POST_CONTENTTYPE == 'application/json':
+        request = urllib2.Request(url, data, {'Content-Type': 'application/json'})
+    elif POST_CONTENTTYPE == 'application/x-www-form-urlencoded':
+        request = urllib2.Request(url, urllib.urlencode({'payload': data}))
     if POST_USER is not None or POST_PASS is not None:
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, url, POST_USER, POST_PASS)
         handler = urllib2.HTTPBasicAuthHandler(password_mgr)
         opener = urllib2.build_opener(handler)
-        u = opener.open(url, urllib.urlencode({'payload': data}))
+        u = opener.open(request)
     else:
-        u = urllib2.urlopen(url, urllib.urlencode({'payload': data}))
+        u = urllib2.urlopen(request)
     u.read()
     u.close()
 
