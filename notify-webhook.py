@@ -34,6 +34,7 @@ def get_repo_name():
 POST_URL = get_config('hooks.webhookurl')
 POST_USER = get_config('hooks.authuser')
 POST_PASS = get_config('hooks.authpass')
+POST_REALM = get_config('hooks.authrealm')
 POST_CONTENTTYPE = get_config('hooks.webhook-contenttype', 'application/x-www-form-urlencoded')
 REPO_URL = get_config('meta.url')
 COMMIT_URL = get_config('meta.commiturl')
@@ -128,18 +129,20 @@ def make_json(old, new, ref):
 
 
 def post(url, data):
+    opener = urllib2.HTTPHandler
     if POST_CONTENTTYPE == 'application/json':
         request = urllib2.Request(url, data, {'Content-Type': 'application/json'})
     elif POST_CONTENTTYPE == 'application/x-www-form-urlencoded':
         request = urllib2.Request(url, urllib.urlencode({'payload': data}))
     if POST_USER is not None or POST_PASS is not None:
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        password_mgr.add_password(None, url, POST_USER, POST_PASS)
-        handler = urllib2.HTTPBasicAuthHandler(password_mgr)
+        password_mgr.add_password(POST_REALM, url, POST_USER, POST_PASS)
+        handlerfunc = urllib2.HTTPBasicAuthHandler
+        if POST_REALM is not None:
+            handlerfunc = urllib2.HTTPDigestAuthHandler
+        handler = handlerfunc(password_mgr)
         opener = urllib2.build_opener(handler)
-        u = opener.open(request)
-    else:
-        u = urllib2.urlopen(request)
+    u = opener.open(request)
     u.read()
     u.close()
 
