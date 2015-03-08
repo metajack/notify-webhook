@@ -55,8 +55,16 @@ if REPO_OWNER_EMAIL is None:
 
 EMAIL_RE = re.compile("^(.*) <(.*)>$")
 
-def get_revisions(old, new):
-    git = subprocess.Popen(['git', 'rev-list', '--pretty=medium', '--reverse', '%s..%s' % (old, new)], stdout=subprocess.PIPE)
+def get_revisions(old, new, head_commit=False):
+    if re.match("^0+$", old):
+        if not head_commit:
+            return []
+
+        commit_range = '%s~1..%s' % (new, new)
+    else:
+        commit_range = '%s..%s' % (old, new)
+        
+    git = subprocess.Popen(['git', 'rev-list', '--pretty=medium', '--reverse', commit_range], stdout=subprocess.PIPE)
     sections = git.stdout.read().split('\n\n')[:-1]
 
     revisions = []
@@ -90,10 +98,39 @@ def get_revisions(old, new):
             props['email'] = 'unknown'
         del props['author']
 
+        if head_commit:
+            return props
+
         revisions.append(props)
         s += 2
 
     return revisions
+
+def get_base_ref(commit, ref):
+    branches = git(['branch', '--contains', commit]).split('\n')
+    CURR_BRANCH_RE = re.compile('^\* \w+$')
+    curr_branch = None
+
+    if len(branches) > 1:
+        on_master = False
+        for branch in branches:
+            if CURR_BRANCH_RE.match(branch):
+                curr_branch = branch.strip('* \n')
+            elif branch.strip() == 'master':
+                on_master = True
+
+        if curr_branch is None and on_master:
+            curr_branch = 'master'
+
+    if curr_branch is None:
+        curr_branch = branches[0].strip('* \n')
+
+    base_ref = 'refs/heads/%s' % curr_branch
+
+    if base_ref == ref:
+        return None
+    else:
+        return base_ref
 
 def make_json(old, new, ref):
     data = {
@@ -124,9 +161,13 @@ def make_json(old, new, ref):
                         'timestamp': r['date']
                         })
     data['commits'] = commits
+    data['head_commit'] = get_revisions(old, new, True)
+
+    base_ref = get_base_ref(new, ref)
+    if base_ref:
+        data['base_ref'] = base_ref
 
     return json.dumps(data)
-
 
 def post(url, data):
     opener = urllib2.HTTPHandler
@@ -142,11 +183,13 @@ def post(url, data):
             handlerfunc = urllib2.HTTPDigestAuthHandler
         handler = handlerfunc(password_mgr)
         opener = urllib2.build_opener(handler)
-    u = opener.open(request)
-    u.read()
-    u.close()
 
-
+    try:
+        u = opener.open(request)
+        u.read()
+        u.close()
+    except urllib2.HTTPError as error:
+        print "POST to " + POST_URL + " returned error code " + str(error.code) + "."
 
 if __name__ == '__main__':
     for line in sys.stdin.xreadlines():
