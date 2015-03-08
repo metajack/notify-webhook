@@ -163,6 +163,8 @@ def get_base_ref(commit, ref):
         return base_ref
 
 def make_json(old, new, ref):
+    # Lots more fields could be added
+    # https://developer.github.com/v3/activity/events/types/#pushevent
     data = {
         'before': old,
         'after': new,
@@ -195,6 +197,7 @@ def make_json(old, new, ref):
                         'modified': r['modified']
                         })
     data['commits'] = commits
+    data['size'] = len(commits)
     data['head_commit'] = get_revisions(old, new, True)
 
     base_ref = get_base_ref(new, ref)
