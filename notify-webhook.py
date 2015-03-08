@@ -211,6 +211,7 @@ def post(url, data):
     opener = urllib2.HTTPHandler
     headers = {
         'Content-Type': POST_CONTENTTYPE,
+        'X-GitHub-Event': 'push',
     }
     if POST_CONTENTTYPE == 'application/json':
         postdata = data
