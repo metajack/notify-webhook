@@ -35,6 +35,7 @@ POST_URL = get_config('hooks.webhookurl')
 POST_USER = get_config('hooks.authuser')
 POST_PASS = get_config('hooks.authpass')
 POST_REALM = get_config('hooks.authrealm')
+POST_SECRET_TOKEN = get_config('hooks.secrettoken')
 POST_CONTENTTYPE = get_config('hooks.webhook-contenttype', 'application/x-www-form-urlencoded')
 REPO_URL = get_config('meta.url')
 COMMIT_URL = get_config('meta.commiturl')
@@ -208,10 +209,22 @@ def make_json(old, new, ref):
 
 def post(url, data):
     opener = urllib2.HTTPHandler
+    headers = {
+        'Content-Type': POST_CONTENTTYPE,
+    }
     if POST_CONTENTTYPE == 'application/json':
-        request = urllib2.Request(url, data, {'Content-Type': 'application/json'})
+        postdata = data
     elif POST_CONTENTTYPE == 'application/x-www-form-urlencoded':
-        request = urllib2.Request(url, urllib.urlencode({'payload': data}))
+        postdata = urllib.urlencode({'payload': data})
+    if POST_SECRET_TOKEN is not None:
+        import hmac
+        import hashlib
+        hmacobj = hmac.new(POST_SECRET_TOKEN, postdata, hashlib.sha1)
+        signature = 'sha1=' + hmacobj.hexdigest()
+        headers['X-Hub-Signature'] = signature
+
+    request = urllib2.Request(url, postdata, headers)
+
     if POST_USER is not None or POST_PASS is not None:
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(POST_REALM, url, POST_USER, POST_PASS)
