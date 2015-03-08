@@ -3,3 +3,4 @@
  - [Vojta Grec](http://www.easysoftware.cz/)
  - [Robin H. Johnson](http://www.orbis-terrarum.net/)
  - [Nguyen Tien Si](info@nguyentiensi.com)
+ - [Andrew Hampe](https://github.com/Ashfire908)

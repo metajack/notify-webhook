@@ -38,8 +38,11 @@ POST_REALM = get_config('hooks.authrealm')
 POST_CONTENTTYPE = get_config('hooks.webhook-contenttype', 'application/x-www-form-urlencoded')
 REPO_URL = get_config('meta.url')
 COMMIT_URL = get_config('meta.commiturl')
+COMPARE_URL = get_config('meta.compareurl')
 if COMMIT_URL == None and REPO_URL != None:
     COMMIT_URL = REPO_URL + r'/commit/%s'
+if COMPARE_URL == None and REPO_URL != None:
+    COMPARE_URL = REPO_URL + r'/compare/%s..%s'
 REPO_NAME = get_repo_name()
 REPO_DESC = ""
 try:
@@ -164,6 +167,7 @@ def make_json(old, new, ref):
         'before': old,
         'after': new,
         'ref': ref,
+        'compare': COMPARE_URL % (old, new),
         'repository': {
             'url': REPO_URL,
             'name': REPO_NAME,
