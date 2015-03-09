@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
-import urllib, urllib2
+import urllib.request, urllib.parse, urllib.error
 import re
 import os
 import subprocess
@@ -15,7 +15,7 @@ def git(args):
     args = ['git'] + args
     git = subprocess.Popen(args, stdout = subprocess.PIPE)
     details = git.stdout.read()
-    details = details.strip()
+    details = details.decode("utf-8").strip()
     return details
 
 def get_config(key, default=None):
@@ -36,7 +36,9 @@ def get_repo_name():
 
 def extract_name_email(s):
     p = re.compile(EMAIL_RE)
-    p.search(s.strip())
+    _ = p.search(s.strip())
+    if _ is None:
+        return (None, None)
     name = _.group(1)
     if name is not None:
         name = name.strip()
@@ -58,9 +60,9 @@ POST_CONTENTTYPE = get_config('hooks.webhook-contenttype', 'application/x-www-fo
 REPO_URL = get_config('meta.url')
 COMMIT_URL = get_config('meta.commiturl')
 COMPARE_URL = get_config('meta.compareurl')
-if COMMIT_URL == None and REPO_URL != None:
+if COMMIT_URL is None and REPO_URL is not None:
     COMMIT_URL = REPO_URL + r'/commit/%s'
-if COMPARE_URL == None and REPO_URL != None:
+if COMPARE_URL is None and REPO_URL is not None:
     COMPARE_URL = REPO_URL + r'/compare/%s..%s'
 REPO_NAME = get_repo_name()
 REPO_DESC = ""
@@ -100,8 +102,8 @@ def get_revisions(old, new, head_commit=False):
     else:
         commit_range = '%s..%s' % (old, new)
         
-    git = subprocess.Popen(['git', 'rev-list', '--pretty=medium', '--reverse', commit_range], stdout=subprocess.PIPE)
-    sections = git.stdout.read().split('\n\n')[:-1]
+    revs = git(['rev-list', '--pretty=medium', '--reverse', commit_range])
+    sections = revs.split('\n\n')
 
     revisions = []
     s = 0
@@ -112,8 +114,7 @@ def get_revisions(old, new, head_commit=False):
         props = {'id': lines[0].strip().split(' ')[1], 'added': [], 'removed': [], 'modified': []}
 
         # call git diff-tree and get the file changes
-        git_difftree = subprocess.Popen(['git', 'diff-tree', '-r', '-C', '%s' % props['id']], stdout=subprocess.PIPE)
-        output = git_difftree.stdout.read()
+        output = git(['diff-tree', '-r', '-C', '%s' % props['id']])
 
         # sort the changes into the added/modified/removed lists
         for i in DIFF_TREE_RE.finditer(output):
@@ -143,7 +144,8 @@ def get_revisions(old, new, head_commit=False):
             props[key[:-1].lower()] = val.strip()
 
         # read the commit message
-        props['message'] = sections[s+1]
+        # Strip leading tabs/4-spaces on the message
+        props['message'] = re.sub(r'^(\t| {4})', '', sections[s+1], 0, re.MULTILINE)
 
         # use github time format
         basetime = datetime.strptime(props['date'][:-6], "%a %b %d %H:%M:%S %Y")
@@ -197,11 +199,14 @@ def get_base_ref(commit, ref):
 def make_json(old, new, ref):
     # Lots more fields could be added
     # https://developer.github.com/v3/activity/events/types/#pushevent
+    compareurl = None
+    if COMPARE_URL is not None: compareurl = COMPARE_URL % (old, new)
+
     data = {
         'before': old,
         'after': new,
         'ref': ref,
-        'compare': COMPARE_URL % (old, new),
+        'compare': compareurl,
         'repository': {
             'url': REPO_URL,
             'name': REPO_NAME,
@@ -217,7 +222,7 @@ def make_json(old, new, ref):
     commits = []
     for r in revisions:
         url = None
-        if COMMIT_URL != None:
+        if COMMIT_URL is not None:
             url = COMMIT_URL % r['id']
         commits.append({'id': r['id'],
                         'author': {'name': r['name'], 'email': r['email']},
@@ -239,7 +244,7 @@ def make_json(old, new, ref):
     return json.dumps(data)
 
 def post(url, data):
-    opener = urllib2.HTTPHandler
+    opener = urllib.request.HTTPHandler
     headers = {
         'Content-Type': POST_CONTENTTYPE,
         'X-GitHub-Event': 'push',
@@ -247,7 +252,7 @@ def post(url, data):
     if POST_CONTENTTYPE == 'application/json':
         postdata = data
     elif POST_CONTENTTYPE == 'application/x-www-form-urlencoded':
-        postdata = urllib.urlencode({'payload': data})
+        postdata = urllib.parse.urlencode({'payload': data})
     if POST_SECRET_TOKEN is not None:
         import hmac
         import hashlib
@@ -255,26 +260,27 @@ def post(url, data):
         signature = 'sha1=' + hmacobj.hexdigest()
         headers['X-Hub-Signature'] = signature
 
-    request = urllib2.Request(url, postdata, headers)
+    request = urllib.request.Request(url, postdata, headers)
 
     if POST_USER is not None or POST_PASS is not None:
-        password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(POST_REALM, url, POST_USER, POST_PASS)
-        handlerfunc = urllib2.HTTPBasicAuthHandler
+        handlerfunc = urllib.request.HTTPBasicAuthHandler
         if POST_REALM is not None:
-            handlerfunc = urllib2.HTTPDigestAuthHandler
+            handlerfunc = urllib.request.HTTPDigestAuthHandler
         handler = handlerfunc(password_mgr)
-        opener = urllib2.build_opener(handler)
+        opener = urllib.request.build_opener(handler)
 
     try:
         u = opener.open(request)
         u.read()
         u.close()
-    except urllib2.HTTPError as error:
-        print "POST to " + POST_URL + " returned error code " + str(error.code) + "."
+    except urllib.error.HTTPError as error:
+        errmsg = "POST to %s returned error code %s." % (POST_URL, str(error.code))
+        print(errmsg, file=sys.stderr)
 
 if __name__ == '__main__':
-    for line in sys.stdin.xreadlines():
+    for line in sys.stdin:
         old, new, ref = line.strip().split(' ')
         data = make_json(old, new, ref)
         if POST_URL:
