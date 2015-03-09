@@ -196,6 +196,21 @@ def get_base_ref(commit, ref):
     else:
         return base_ref
 
+# http://stackoverflow.com/a/20559031
+def purify(o):
+    if hasattr(o, 'items'):
+        oo = type(o)()
+        for k in o:
+            if k != None and o[k] != None:
+                oo[k] = purify(o[k])
+    elif hasattr(o, '__iter__'):
+        oo = []
+        for it in o:
+            if it != None:
+                oo.append(purify(it))
+    else: return o
+    return type(o)(oo)
+
 def make_json(old, new, ref):
     # Lots more fields could be added
     # https://developer.github.com/v3/activity/events/types/#pushevent
