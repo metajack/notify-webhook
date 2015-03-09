@@ -8,6 +8,9 @@ import subprocess
 from datetime import datetime
 import simplejson as json
 
+EMAIL_RE = re.compile("^(.*) <(.*)>$")
+DIFF_TREE_RE = re.compile("^:(?P<src_mode>[0-9]{6}) (?P<dst_mode>[0-9]{6}) (?P<src_hash>[0-9a-f]{7,40}) (?P<dst_hash>[0-9a-f]{7,40}) (?P<status>[ADMTUX]|[CR][0-9]{1,3})\s+(?P<file1>\S+)(?:\s+(?P<file2>\S+))?$", re.MULTILINE)
+
 def git(args):
     args = ['git'] + args
     git = subprocess.Popen(args, stdout = subprocess.PIPE)
@@ -31,6 +34,21 @@ def get_repo_name():
     else:
         return os.path.basename(os.path.dirname(os.getcwd()))
 
+def extract_name_email(s):
+    p = re.compile(EMAIL_RE)
+    p.search(s.strip())
+    name = _.group(1)
+    if name is not None:
+        name = name.strip()
+        if len(name) <= 0:
+            name = None
+    email = _.group(2)
+    if email is not None:
+        email = email.strip()
+        if len(email) <= 0:
+            email = None
+    return (name, email)
+
 POST_URL = get_config('hooks.webhookurl')
 POST_USER = get_config('hooks.authuser')
 POST_PASS = get_config('hooks.authpass')
@@ -47,18 +65,27 @@ if COMPARE_URL == None and REPO_URL != None:
 REPO_NAME = get_repo_name()
 REPO_DESC = ""
 try:
-    REPO_DESC = get_config('meta.description') or open('description', 'r').read()
+    REPO_DESC = get_config('meta.description') or get_config('gitweb.description') or open('description', 'r').read()
 except Exception:
     pass
+
+# Explicit keys
 REPO_OWNER_NAME = get_config('meta.ownername')
 REPO_OWNER_EMAIL = get_config('meta.owneremail')
-if REPO_OWNER_NAME is None:
-    REPO_OWNER_NAME = git(['log','--reverse','--format=%an']).split("\n")[0]
-if REPO_OWNER_EMAIL is None:
-    REPO_OWNER_EMAIL = git(['log','--reverse','--format=%ae']).split("\n")[0]
-
-EMAIL_RE = re.compile("^(.*) <(.*)>$")
-DIFF_TREE_RE = re.compile("^:(?P<src_mode>[0-9]{6}) (?P<dst_mode>[0-9]{6}) (?P<src_hash>[0-9a-f]{7,40}) (?P<dst_hash>[0-9a-f]{7,40}) (?P<status>[ADMTUX]|[CR][0-9]{1,3})\s+(?P<file1>\S+)(?:\s+(?P<file2>\S+))?$", re.MULTILINE)
+# Fallback to gitweb
+gitweb_owner = get_config('gitweb.owner')
+if gitweb_owner is not None and REPO_OWNER_NAME is None and REPO_OWNER_EMAIL is None:
+    (name, email) = extract_name_email(gitweb_owner)
+    REPO_OWNER_NAME = name if name is not None
+    REPO_OWNER_EMAIL = email if email is not None
+# Fallback to the repo
+if REPO_OWNER_NAME is None or REPO_OWNER_EMAIL is None:
+    # You cannot include -n1 because it is processed before --reverse
+    logmsg = git(['log','--reverse','--format="%an%x09%ae"']).split("\n")[0]
+    # These will never be null
+    (name, email) = logmsg.split("\t")
+    REPO_OWNER_NAME = name if REPO_OWNER_NAME is None
+    REPO_OWNER_EMAIL = email if REPO_OWNER_EMAIL is None
 
 def get_revisions(old, new, head_commit=False):
     if re.match("^0+$", old):
