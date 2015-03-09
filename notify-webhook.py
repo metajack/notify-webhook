@@ -7,8 +7,10 @@ import os
 import subprocess
 from datetime import datetime
 import simplejson as json
+from itertools import chain, repeat
+from collections import OrderedDict
 
-EMAIL_RE = re.compile("^(.*) <(.*)>$")
+EMAIL_RE = re.compile("^\"?(.*)\"? <(.*)>$")
 DIFF_TREE_RE = re.compile("^:(?P<src_mode>[0-9]{6}) (?P<dst_mode>[0-9]{6}) (?P<src_hash>[0-9a-f]{7,40}) (?P<dst_hash>[0-9a-f]{7,40}) (?P<status>[ADMTUX]|[CR][0-9]{1,3})\s+(?P<file1>\S+)(?:\s+(?P<file2>\S+))?$", re.MULTILINE)
 
 def git(args):
@@ -18,15 +20,21 @@ def git(args):
     details = details.decode("utf-8").strip()
     return details
 
+def grouper(n, iterable, padvalue=None):
+    "grouper(3, 'abcdefg', 'x') --> ('a','b','c'), ('d','e','f'), ('g','x','x')"
+    return zip(*[chain(iterable, repeat(padvalue, n-1))]*n)
+
+def _git_config():
+    raw_config = git(['config', '-l', '-z'])
+    return OrderedDict(grouper(2, raw_config.split("\0")))
+
+GIT_CONFIG = _git_config()
+
 def get_config(key, default=None):
-    details = git(['config', '%s' % (key)])
-    if len(details) > 0:
-        return details
-    else:
-        return default
+    return GIT_CONFIG.get(key, default)
 
 def get_repo_name():
-    if git(['rev-parse','--is-bare-repository']) == 'true':
+    if get_config('core.bare', 'false') == 'true':
         name = os.path.basename(os.getcwd())
         if name.endswith('.git'):
             name = name[:-4]
@@ -85,7 +93,7 @@ if gitweb_owner is not None and REPO_OWNER_NAME is None and REPO_OWNER_EMAIL is 
 # Fallback to the repo
 if REPO_OWNER_NAME is None or REPO_OWNER_EMAIL is None:
     # You cannot include -n1 because it is processed before --reverse
-    logmsg = git(['log','--reverse','--format="%an%x09%ae"']).split("\n")[0]
+    logmsg = git(['log','--reverse','--format=%an%x09%ae']).split("\n")[0]
     # These will never be null
     (name, email) = logmsg.split("\t")
     if REPO_OWNER_NAME is None:
@@ -101,7 +109,7 @@ def get_revisions(old, new, head_commit=False):
         commit_range = '%s~1..%s' % (new, new)
     else:
         commit_range = '%s..%s' % (old, new)
-        
+
     revs = git(['rev-list', '--pretty=medium', '--reverse', commit_range])
     sections = revs.split('\n\n')
 
