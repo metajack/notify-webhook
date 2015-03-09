@@ -76,16 +76,20 @@ REPO_OWNER_EMAIL = get_config('meta.owneremail')
 gitweb_owner = get_config('gitweb.owner')
 if gitweb_owner is not None and REPO_OWNER_NAME is None and REPO_OWNER_EMAIL is None:
     (name, email) = extract_name_email(gitweb_owner)
-    REPO_OWNER_NAME = name if name is not None
-    REPO_OWNER_EMAIL = email if email is not None
+    if name is not None:
+        REPO_OWNER_NAME = name
+    if email is not None:
+        REPO_OWNER_EMAIL = email
 # Fallback to the repo
 if REPO_OWNER_NAME is None or REPO_OWNER_EMAIL is None:
     # You cannot include -n1 because it is processed before --reverse
     logmsg = git(['log','--reverse','--format="%an%x09%ae"']).split("\n")[0]
     # These will never be null
     (name, email) = logmsg.split("\t")
-    REPO_OWNER_NAME = name if REPO_OWNER_NAME is None
-    REPO_OWNER_EMAIL = email if REPO_OWNER_EMAIL is None
+    if REPO_OWNER_NAME is None:
+        REPO_OWNER_NAME = name
+    if REPO_OWNER_EMAIL is None:
+        REPO_OWNER_EMAIL = email
 
 def get_revisions(old, new, head_commit=False):
     if re.match("^0+$", old):
