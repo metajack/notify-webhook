@@ -26,7 +26,7 @@ def grouper(n, iterable, padvalue=None):
 
 def _git_config():
     raw_config = git(['config', '-l', '-z'])
-    return OrderedDict(grouper(2, raw_config.split("\0")))
+    return OrderedDict(grouper(2, re.compile("[\0\n]").split(raw_config)))
 
 GIT_CONFIG = _git_config()
 
