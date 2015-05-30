@@ -268,7 +268,6 @@ def make_json(old, new, ref):
     return json.dumps(data)
 
 def post(url, data):
-    opener = urllib.request.HTTPHandler
     headers = {
         'Content-Type': POST_CONTENTTYPE,
         'X-GitHub-Event': 'push',
@@ -286,6 +285,9 @@ def post(url, data):
 
     request = urllib.request.Request(url, postdata, headers)
 
+    # Default handler
+    handler = urllib.request.HTTPHandler
+    # Override handler for passwords
     if POST_USER is not None or POST_PASS is not None:
         password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(POST_REALM, url, POST_USER, POST_PASS)
@@ -293,7 +295,8 @@ def post(url, data):
         if POST_REALM is not None:
             handlerfunc = urllib.request.HTTPDigestAuthHandler
         handler = handlerfunc(password_mgr)
-        opener = urllib.request.build_opener(handler)
+
+    opener = urllib.request.build_opener(handler)
 
     try:
         u = opener.open(request)
