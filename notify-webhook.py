@@ -20,13 +20,14 @@ def git(args):
     details = details.decode("utf-8").strip()
     return details
 
-def grouper(n, iterable, padvalue=None):
-    "grouper(3, 'abcdefg', 'x') --> ('a','b','c'), ('d','e','f'), ('g','x','x')"
-    return zip(*[chain(iterable, repeat(padvalue, n-1))]*n)
-
 def _git_config():
     raw_config = git(['config', '-l', '-z'])
-    return OrderedDict(grouper(2, raw_config.split("\0")))
+    items = raw_config.split("\0")
+    # remove empty items
+    items = filter(lambda i: len(i) > 0, items)
+    # split into key/value based on FIRST \n; allow embedded \n in values
+    items = [item.partition("\n")[0:3:2] for item in items]
+    return OrderedDict(items)
 
 GIT_CONFIG = _git_config()
 
