@@ -276,7 +276,7 @@ def post(url, data):
     if POST_CONTENTTYPE == 'application/json':
         postdata = data
     elif POST_CONTENTTYPE == 'application/x-www-form-urlencoded':
-        postdata = urllib.parse.urlencode({'payload': data})
+        postdata = urllib.parse.urlencode({'payload': data}).encode('UTF-8')
     if POST_SECRET_TOKEN is not None:
         import hmac
         import hashlib
