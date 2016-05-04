@@ -48,7 +48,24 @@ The URL to the webhook consumer - the commit details will be POSTed
 here.
 
 Defaults to `None` **which will echo the JSON data instead of sending
-it**.
+it** (unless the `hooks.webhookurls` configuration is set).
+
+#### hooks.webhookurls
+
+A list of URLs to different webhook consumers - the commit details will
+be POSTed to each of them in the order they arrive (if hooks.webhookurl
+is set, the commit details will be POSTed to that URL first).
+
+The value is parsed like a csv file so each URL is separated by a comma
+or a newline (or a combination of the two). URLs with a comma in them
+can be wrapped in quotation marks.
+
+An example of value with two URLS:
+
+    git config hooks.webhookurls 'http://example.com/hook,"http://other.example.com/hook,with,comma"'
+
+Defaults to `None` **which will echo the JSON data instead of sending
+it** (unless the `hooks.webhookurl` configuration is set).
 
 #### meta.ownername / meta.owneremail
 Details about the repository owner.
