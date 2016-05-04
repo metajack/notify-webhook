@@ -303,7 +303,7 @@ def post(url, data):
         u.read()
         u.close()
     except urllib.error.HTTPError as error:
-        errmsg = "POST to %s returned error code %s." % (POST_URL, str(error.code))
+        errmsg = "POST to %s returned error code %s." % (url, str(error.code))
         print(errmsg, file=sys.stderr)
 
 if __name__ == '__main__':
