@@ -5,6 +5,8 @@ import urllib.request, urllib.parse, urllib.error
 import re
 import os
 import subprocess
+import csv
+import io
 from datetime import datetime
 import simplejson as json
 from itertools import chain, repeat
@@ -61,6 +63,7 @@ def extract_name_email(s):
     return (name, email)
 
 POST_URL = get_config('hooks.webhookurl')
+POST_URLS = get_config('hooks.webhookurls')
 POST_USER = get_config('hooks.authuser')
 POST_PASS = get_config('hooks.authpass')
 POST_REALM = get_config('hooks.authrealm')
@@ -303,15 +306,22 @@ def post(url, data):
         u.read()
         u.close()
     except urllib.error.HTTPError as error:
-        errmsg = "POST to %s returned error code %s." % (POST_URL, str(error.code))
+        errmsg = "POST to %s returned error code %s." % (url, str(error.code))
         print(errmsg, file=sys.stderr)
 
 if __name__ == '__main__':
     for line in sys.stdin:
         old, new, ref = line.strip().split(' ')
         data = make_json(old, new, ref)
-        if POST_URL:
-            post(POST_URL, data)
+        if POST_URL or POST_URLS:
+            if POST_URL:
+                post(POST_URL, data)
+            if POST_URLS:
+                urls = io.StringIO(POST_URLS)
+                rows = csv.reader(urls)
+                for row in rows:
+                    for url in row:
+                        post(url.strip(), data)
         else:
             print(data)
 
