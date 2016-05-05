@@ -69,6 +69,7 @@ POST_PASS = get_config('hooks.authpass')
 POST_REALM = get_config('hooks.authrealm')
 POST_SECRET_TOKEN = get_config('hooks.secrettoken')
 POST_CONTENTTYPE = get_config('hooks.webhook-contenttype', 'application/x-www-form-urlencoded')
+POST_TIMEOUT = get_config('hooks.timeout')
 REPO_URL = get_config('meta.url')
 COMMIT_URL = get_config('meta.commiturl')
 COMPARE_URL = get_config('meta.compareurl')
@@ -302,7 +303,10 @@ def post(url, data):
     opener = urllib.request.build_opener(handler)
 
     try:
-        u = opener.open(request)
+        if POST_TIMEOUT is not None:
+            u = opener.open(request, None, float(POST_TIMEOUT))
+        else:
+            u = opener.open(request)
         u.read()
         u.close()
     except urllib.error.HTTPError as error:
