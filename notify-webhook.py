@@ -277,7 +277,7 @@ def post(url, data):
         'X-GitHub-Event': 'push',
     }
     if POST_CONTENTTYPE == 'application/json':
-        postdata = data
+        postdata = data.encode('UTF-8')
     elif POST_CONTENTTYPE == 'application/x-www-form-urlencoded':
         postdata = urllib.parse.urlencode({'payload': data}).encode('UTF-8')
     if POST_SECRET_TOKEN is not None:
