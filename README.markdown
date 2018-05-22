@@ -38,8 +38,8 @@ Configuration example:
 
     repo some-repo-in-gitolite
 	  option hook.post-receive = notify-webhook
-	  config meta.url "http://example.com"
-      config hooks.webhookurl "http://example.net"
+	  config meta.url = "http://example.com"
+      config hooks.webhookurl = "http://example.net"
 
 ### Configuration Parameters
 
