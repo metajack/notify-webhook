@@ -19,7 +19,7 @@ def git(args):
     args = ['git'] + args
     git = subprocess.Popen(args, stdout = subprocess.PIPE)
     details = git.stdout.read()
-    details = details.decode("utf-8").strip()
+    details = details.decode('utf-8', 'replace').strip()
     return details
 
 def _git_config():
