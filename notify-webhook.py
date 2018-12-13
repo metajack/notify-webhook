@@ -314,20 +314,21 @@ def post(url, data):
         errmsg = "POST to %s returned error code %s." % (url, str(error.code))
         print(errmsg, file=sys.stderr)
 
-if __name__ == '__main__':
-    for line in sys.stdin:
+def main(lines):
+    for line in lines:
         old, new, ref = line.strip().split(' ')
         data = make_json(old, new, ref)
-        if POST_URL or POST_URLS:
-            if POST_URL:
-                post(POST_URL, data)
-            if POST_URLS:
-                urls = io.StringIO(POST_URLS)
-                rows = csv.reader(urls)
-                for row in rows:
-                    for url in row:
-                        post(url.strip(), data)
+        urls = []
+        if POST_URL:
+            a.append(POST_URL)
+        if POST_URLS:
+            urls = io.StringIO(POST_URLS)
+            urls.extend(csv.reader(urls))
+        if urls:
+            for url in row:
+                post(url.strip(), data)
         else:
             print(data)
 
-
+if __name__ == '__main__':
+    main(sys.stdin)
