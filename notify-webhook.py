@@ -14,6 +14,7 @@ from collections import OrderedDict
 
 EMAIL_RE = re.compile("^\"?(.*)\"? <(.*)>$")
 DIFF_TREE_RE = re.compile("^:(?P<src_mode>[0-9]{6}) (?P<dst_mode>[0-9]{6}) (?P<src_hash>[0-9a-f]{7,40}) (?P<dst_hash>[0-9a-f]{7,40}) (?P<status>[ADMTUX]|[CR][0-9]{1,3})\s+(?P<file1>\S+)(?:\s+(?P<file2>\S+))?$", re.MULTILINE)
+EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
 
 def git(args):
     args = ['git'] + args
@@ -111,7 +112,7 @@ def get_revisions(old, new, head_commit=False):
         if not head_commit:
             return []
 
-        commit_range = '%s~1..%s' % (new, new)
+        commit_range = '%s..%s' % (EMPTY_TREE_HASH, new)
     else:
         commit_range = '%s..%s' % (old, new)
 
