@@ -71,6 +71,7 @@ POST_REALM = get_config('hooks.authrealm')
 POST_SECRET_TOKEN = get_config('hooks.secrettoken')
 POST_CONTENTTYPE = get_config('hooks.webhook-contenttype', 'application/x-www-form-urlencoded')
 POST_TIMEOUT = get_config('hooks.timeout')
+DEBUG = get_config('hooks.webhook-debug')
 REPO_URL = get_config('meta.url')
 COMMIT_URL = get_config('meta.commiturl')
 COMPARE_URL = get_config('meta.compareurl')
@@ -318,6 +319,8 @@ def main(lines):
     for line in lines:
         old, new, ref = line.strip().split(' ')
         data = make_json(old, new, ref)
+        if DEBUG:
+            print(data)
         urls = []
         if POST_URL:
             a.append(POST_URL)
@@ -327,8 +330,6 @@ def main(lines):
         if urls:
             for url in row:
                 post(url.strip(), data)
-        else:
-            print(data)
 
 if __name__ == '__main__':
     main(sys.stdin)
