@@ -110,9 +110,6 @@ if REPO_OWNER_NAME is None or REPO_OWNER_EMAIL is None:
 
 def get_revisions(old, new, head_commit=False):
     if re.match("^0+$", old):
-        if not head_commit:
-            return []
-
         commit_range = '%s..%s' % (EMPTY_TREE_HASH, new)
     else:
         commit_range = '%s..%s' % (old, new)
