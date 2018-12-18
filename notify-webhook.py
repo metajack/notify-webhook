@@ -9,7 +9,6 @@ import csv
 import io
 from datetime import datetime
 import simplejson as json
-from itertools import chain, repeat
 from collections import OrderedDict
 
 EMAIL_RE = re.compile("^\"?(.*)\"? <(.*)>$")
@@ -18,7 +17,7 @@ EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
 
 def git(args):
     args = ['git'] + args
-    git = subprocess.Popen(args, stdout = subprocess.PIPE)
+    git = subprocess.Popen(args, stdout=subprocess.PIPE)
     details = git.stdout.read()
     details = details.decode('utf-8', 'replace').strip()
     return details
@@ -100,7 +99,7 @@ if gitweb_owner is not None and REPO_OWNER_NAME is None and REPO_OWNER_EMAIL is 
 # Fallback to the repo
 if REPO_OWNER_NAME is None or REPO_OWNER_EMAIL is None:
     # You cannot include -n1 because it is processed before --reverse
-    logmsg = git(['log','--reverse','--format=%an%x09%ae']).split("\n")[0]
+    logmsg = git(['log', '--reverse', '--format=%an%x09%ae']).split("\n")[0]
     # These will never be null
     (name, email) = logmsg.split("\t")
     if REPO_OWNER_NAME is None:
