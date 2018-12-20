@@ -44,7 +44,7 @@ def get_repo_name():
             name = name[:-4]
         return name
     else:
-        return os.path.basename(os.path.dirname(os.getcwd()))
+        return os.path.basename(os.getcwd())
 
 def extract_name_email(s):
     p = re.compile(EMAIL_RE)
