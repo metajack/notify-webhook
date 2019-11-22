@@ -323,12 +323,12 @@ def main(lines):
             print(data)
         urls = []
         if POST_URL:
-            a.append(POST_URL)
+            url.append(POST_URL)
         if POST_URLS:
             urls = io.StringIO(POST_URLS)
             urls.extend(csv.reader(urls))
         if urls:
-            for url in row:
+            for url in urls:
                 post(url.strip(), data)
 
 if __name__ == '__main__':
