@@ -98,6 +98,31 @@ def extract_name_email(s):
             email = None
     return (name, email)
 
+def get_repo_owner():
+    # Explicit keys
+    repo_owner_name = get_config('meta.ownername')
+    repo_owner_email = get_config('meta.owneremail')
+    # Fallback to gitweb
+    gitweb_owner = get_config('gitweb.owner')
+    if gitweb_owner is not None and repo_owner_name is None and repo_owner_email is None:
+        (name, email) = extract_name_email(gitweb_owner)
+        if name is not None:
+            repo_owner_name = name
+        if email is not None:
+            repo_owner_email = email
+    # Fallback to the repo
+    if repo_owner_name is None or repo_owner_email is None:
+        # You cannot include -n1 because it is processed before --reverse
+        logmsg = git(['log', '--reverse', '--format=%an%x09%ae']).split("\n")[0]
+        # These will never be null
+        (name, email) = logmsg.split("\t")
+        if repo_owner_name is None:
+            repo_owner_name = name
+        if repo_owner_email is None:
+            repo_owner_email = email
+
+    return (repo_owner_name, repo_owner_email)
+
 POST_URL = get_config('hooks.webhookurl')
 POST_URLS = get_config('hooks.webhookurls')
 POST_USER = get_config('hooks.authuser')
@@ -116,28 +141,7 @@ if COMPARE_URL is None and REPO_URL is not None:
     COMPARE_URL = REPO_URL + r'/compare/%s..%s'
 REPO_NAME = get_repo_name()
 REPO_DESC = get_repo_description()
-
-# Explicit keys
-REPO_OWNER_NAME = get_config('meta.ownername')
-REPO_OWNER_EMAIL = get_config('meta.owneremail')
-# Fallback to gitweb
-gitweb_owner = get_config('gitweb.owner')
-if gitweb_owner is not None and REPO_OWNER_NAME is None and REPO_OWNER_EMAIL is None:
-    (name, email) = extract_name_email(gitweb_owner)
-    if name is not None:
-        REPO_OWNER_NAME = name
-    if email is not None:
-        REPO_OWNER_EMAIL = email
-# Fallback to the repo
-if REPO_OWNER_NAME is None or REPO_OWNER_EMAIL is None:
-    # You cannot include -n1 because it is processed before --reverse
-    logmsg = git(['log', '--reverse', '--format=%an%x09%ae']).split("\n")[0]
-    # These will never be null
-    (name, email) = logmsg.split("\t")
-    if REPO_OWNER_NAME is None:
-        REPO_OWNER_NAME = name
-    if REPO_OWNER_EMAIL is None:
-        REPO_OWNER_EMAIL = email
+(REPO_OWNER_NAME, REPO_OWNER_EMAIL) = get_repo_owner()
 
 def get_revisions(old, new, head_commit=False):
     if re.match(r"^0+$", old):
