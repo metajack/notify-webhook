@@ -247,19 +247,20 @@ def get_base_ref(commit, ref):
     return base_ref
 
 # http://stackoverflow.com/a/20559031
-def purify(o):
-    if hasattr(o, 'items'):
-        oo = type(o)()
-        for k in o:
-            if k != None and o[k] != None:
-                oo[k] = purify(o[k])
-    elif hasattr(o, '__iter__'):
-        oo = []
-        for it in o:
-            if it != None:
-                oo.append(purify(it))
-    else: return o
-    return type(o)(oo)
+def purify(obj):
+    if hasattr(obj, 'items'):
+        newobj = type(obj)()
+        for k in obj:
+            if k is not None and obj[k] is not None:
+                newobj[k] = purify(obj[k])
+    elif hasattr(obj, '__iter__'):
+        newobj = []
+        for k in obj:
+            if k is not None:
+                newobj.append(purify(k))
+    else:
+        return obj
+    return type(obj)(newobj)
 
 def make_json(old, new, ref):
     # Lots more fields could be added
