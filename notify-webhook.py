@@ -65,6 +65,22 @@ def get_repo_name():
     else:
         return os.path.basename(os.getcwd())
 
+def get_repo_description():
+    description = get_config('meta.description')
+    if description:
+        return description
+
+    description = get_config('gitweb.description')
+    if description:
+        return description
+
+    if os.path.exists('description'):
+        with open('description', 'r') as fp:
+            return fp.read()
+
+    return ''
+
+
 def extract_name_email(s):
     p = EMAIL_RE
     _ = p.search(s.strip())
@@ -99,11 +115,7 @@ if COMMIT_URL is None and REPO_URL is not None:
 if COMPARE_URL is None and REPO_URL is not None:
     COMPARE_URL = REPO_URL + r'/compare/%s..%s'
 REPO_NAME = get_repo_name()
-REPO_DESC = ""
-try:
-    REPO_DESC = get_config('meta.description') or get_config('gitweb.description') or open('description', 'r').read()
-except Exception:
-    pass
+REPO_DESC = get_repo_description()
 
 # Explicit keys
 REPO_OWNER_NAME = get_config('meta.ownername')
