@@ -4,6 +4,8 @@ import os
 import re
 import subprocess
 import sys
+import hmac
+import hashlib
 from datetime import datetime
 from collections import OrderedDict
 
@@ -311,8 +313,6 @@ def post(url, data):
     elif POST_CONTENTTYPE == 'application/x-www-form-urlencoded':
         postdata = urllib.parse.urlencode({'payload': data}).encode('UTF-8')
     if POST_SECRET_TOKEN is not None:
-        import hmac
-        import hashlib
         hmacobj = hmac.new(POST_SECRET_TOKEN, postdata, hashlib.sha1)
         signature = 'sha1=' + hmacobj.hexdigest()
         headers['X-Hub-Signature'] = signature
