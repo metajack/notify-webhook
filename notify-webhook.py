@@ -62,8 +62,9 @@ def get_repo_name():
         if name.endswith('.git'):
             name = name[:-4]
         return name
-    else:
-        return os.path.basename(os.getcwd())
+
+    # Fallback:
+    return os.path.basename(os.getcwd())
 
 def get_repo_description():
     description = get_config('meta.description')
@@ -240,8 +241,9 @@ def get_base_ref(commit, ref):
 
     if base_ref == ref:
         return None
-    else:
-        return base_ref
+
+    # Fallback
+    return base_ref
 
 # http://stackoverflow.com/a/20559031
 def purify(o):
