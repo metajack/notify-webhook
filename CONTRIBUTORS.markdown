@@ -4,3 +4,4 @@
  - [Robin H. Johnson](http://www.orbis-terrarum.net/)
  - [Nguyen Tien Si](info@nguyentiensi.com)
  - [Andrew Hampe](https://github.com/Ashfire908)
+ - [Omer Dagan](https://github.com/mromerdagan)
