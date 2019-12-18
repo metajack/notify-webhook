@@ -66,7 +66,7 @@ def get_repo_name():
         return os.path.basename(os.getcwd())
 
 def extract_name_email(s):
-    p = re.compile(EMAIL_RE)
+    p = EMAIL_RE
     _ = p.search(s.strip())
     if _ is None:
         return (None, None)
