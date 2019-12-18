@@ -108,7 +108,9 @@ def get_repo_owner():
     repo_owner_email = get_config('meta.owneremail')
     # Fallback to gitweb
     gitweb_owner = get_config('gitweb.owner')
-    if gitweb_owner is not None and repo_owner_name is None and repo_owner_email is None:
+    if gitweb_owner is not None and \
+            repo_owner_name is None and \
+            repo_owner_email is None:
         (name, email) = extract_name_email(gitweb_owner)
         if name is not None:
             repo_owner_name = name
@@ -180,24 +182,32 @@ def get_revisions(old, new, head_commit=False):
         # sort the changes into the added/modified/removed lists
         for i in DIFF_TREE_RE.finditer(output):
             item = i.groupdict()
-            if item['status'] == 'A':      # addition of a file
+            if item['status'] == 'A':
+                # addition of a file
                 props['added'].append(item['file1'])
-            elif item['status'][0] == 'C':  # copy of a file into a new one
+            elif item['status'][0] == 'C':
+                # copy of a file into a new one
                 props['added'].append(item['file2'])
-            elif item['status'] == 'D':    # deletion of a file
+            elif item['status'] == 'D':
+                # deletion of a file
                 props['removed'].append(item['file1'])
-            elif item['status'] == 'M':    # modification of the contents or mode of a file
+            elif item['status'] == 'M':
+                # modification of the contents or mode of a file
                 props['modified'].append(item['file1'])
-            elif item['status'][0] == 'R':  # renaming of a file
+            elif item['status'][0] == 'R':
+                # renaming of a file
                 props['removed'].append(item['file1'])
                 props['added'].append(item['file2'])
-            elif item['status'] == 'T':    # change in the type of the file
+            elif item['status'] == 'T':
+                # change in the type of the file
                 props['modified'].append(item['file1'])
-            else:   # Covers U (file is unmerged)
-                    # and X ("unknown" change type, usually an error)
-                pass    # When we get X, we do not know what actually happened so
+            else:
+                # Covers U (file is unmerged)
+                # and X ("unknown" change type, usually an error)
+                # When we get X, we do not know what actually happened so
                 # it's safest just to ignore it. We shouldn't be seeing U
                 # anyway, so we can ignore that too.
+                pass
 
         # read the header
         for l in lines[1:]:
