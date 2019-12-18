@@ -303,15 +303,22 @@ def make_json(old, new, ref):
 
     return json.dumps(data)
 
+def post_encode_data(contenttype, rawdata):
+    if contenttype == 'application/json':
+        return rawdata.encode('UTF-8')
+    if contenttype == 'application/x-www-form-urlencoded':
+        return urllib.parse.urlencode({'payload': rawdata}).encode('UTF-8')
+
+    assert False, "Unsupported data encoding"
+    return None
+
 def post(url, data):
     headers = {
         'Content-Type': POST_CONTENTTYPE,
         'X-GitHub-Event': 'push',
     }
-    if POST_CONTENTTYPE == 'application/json':
-        postdata = data.encode('UTF-8')
-    elif POST_CONTENTTYPE == 'application/x-www-form-urlencoded':
-        postdata = urllib.parse.urlencode({'payload': data}).encode('UTF-8')
+    postdata = post_encode_data(POST_CONTENTTYPE, data)
+
     if POST_SECRET_TOKEN is not None:
         hmacobj = hmac.new(POST_SECRET_TOKEN, postdata, hashlib.sha1)
         signature = 'sha1=' + hmacobj.hexdigest()
