@@ -86,18 +86,10 @@ def get_repo_description():
 def extract_name_email(s):
     p = EMAIL_RE
     _ = p.search(s.strip())
-    if _ is None:
+    if not _:
         return (None, None)
-    name = _.group('name')
-    if name is not None:
-        name = name.strip()
-        if len(name) <= 0:
-            name = None
-    email = _.group('email')
-    if email is not None:
-        email = email.strip()
-        if len(email) <= 0:
-            email = None
+    name = (_.group('name') or '').strip()
+    email = (_.group('email') or '').strip()
     return (name, email)
 
 def get_repo_owner():
