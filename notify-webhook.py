@@ -37,8 +37,8 @@ EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
 
 def git(args):
     args = ['git'] + args
-    git = subprocess.Popen(args, stdout=subprocess.PIPE)
-    details = git.stdout.read()
+    cmd = subprocess.Popen(args, stdout=subprocess.PIPE)
+    details = cmd.stdout.read()
     details = details.decode('utf-8', 'replace').strip()
     return details
 
