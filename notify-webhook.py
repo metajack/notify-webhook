@@ -261,7 +261,8 @@ def make_json(old, new, ref):
     # Lots more fields could be added
     # https://developer.github.com/v3/activity/events/types/#pushevent
     compareurl = None
-    if COMPARE_URL is not None: compareurl = COMPARE_URL % (old, new)
+    if COMPARE_URL:
+        compareurl = COMPARE_URL % (old, new)
 
     data = {
         'before': old,
