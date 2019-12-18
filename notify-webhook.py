@@ -12,7 +12,27 @@ import simplejson as json
 from collections import OrderedDict
 
 EMAIL_RE = re.compile(r"^(\"?)(?P<name>.*)\1\s+<(?P<email>.*)>$")
-DIFF_TREE_RE = re.compile("^:(?P<src_mode>[0-9]{6}) (?P<dst_mode>[0-9]{6}) (?P<src_hash>[0-9a-f]{7,40}) (?P<dst_hash>[0-9a-f]{7,40}) (?P<status>[ADMTUX]|[CR][0-9]{1,3})\s+(?P<file1>\S+)(?:\s+(?P<file2>\S+))?$", re.MULTILINE)
+
+# see git-diff-tree 'RAW OUTPUT FORMAT'
+# https://git-scm.com/docs/git-diff-tree#_raw_output_format
+DIFF_TREE_RE = re.compile(r" \
+        ^: \
+          (?P<src_mode>[0-9]{6}) \
+          \s+ \
+          (?P<dst_mode>[0-9]{6}) \
+          \s+ \
+          (?P<src_hash>[0-9a-f]{7,40}) \
+          \s+ \
+          (?P<dst_hash>[0-9a-f]{7,40}) \
+          \s+ \
+          (?P<status>[ADTUX]|[CR][0-9]{1,3}|M[0-9]{0,3}) \
+          \s+ \
+          (?P<file1>\S+) \
+          (?:\s+ \
+            (?P<file2>\S+) \
+          )? \
+        $", re.MULTILINE | re.VERBOSE)
+
 EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
 
 def git(args):
