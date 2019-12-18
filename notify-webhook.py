@@ -312,6 +312,19 @@ def post_encode_data(contenttype, rawdata):
     assert False, "Unsupported data encoding"
     return None
 
+def build_handler(realm, url, user, passwd):
+    # Default handler
+    # HTTP requires a username at LEAST
+    if not user:
+        return urllib.request.HTTPHandler
+
+    password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+    password_mgr.add_password(realm, url, user, passwd)
+    handlerfunc = urllib.request.HTTPBasicAuthHandler
+    if realm:
+        handlerfunc = urllib.request.HTTPDigestAuthHandler
+    return handlerfunc(password_mgr)
+
 def post(url, data):
     headers = {
         'Content-Type': POST_CONTENTTYPE,
@@ -325,18 +338,7 @@ def post(url, data):
         headers['X-Hub-Signature'] = signature
 
     request = urllib.request.Request(url, postdata, headers)
-
-    # Default handler
-    handler = urllib.request.HTTPHandler
-    # Override handler for passwords
-    if POST_USER is not None or POST_PASS is not None:
-        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-        password_mgr.add_password(POST_REALM, url, POST_USER, POST_PASS)
-        handlerfunc = urllib.request.HTTPBasicAuthHandler
-        if POST_REALM is not None:
-            handlerfunc = urllib.request.HTTPDigestAuthHandler
-        handler = handlerfunc(password_mgr)
-
+    handler = build_handler(POST_USER, url, POST_PASS, POST_REALM)
     opener = urllib.request.build_opener(handler)
 
     try:
