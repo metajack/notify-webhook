@@ -174,7 +174,7 @@ def get_revisions(old, new, head_commit=False):
                 props['removed'].append(item['file1'])
                 props['added'].append(item['file2'])
             elif item['status'] == 'T':    # change in the type of the file
-                 props['modified'].append(item['file1'])
+                props['modified'].append(item['file1'])
             else:   # Covers U (file is unmerged)
                     # and X ("unknown" change type, usually an error)
                 pass    # When we get X, we do not know what actually happened so
