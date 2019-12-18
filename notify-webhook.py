@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
-import sys
-import urllib.request, urllib.parse, urllib.error
-import re
 import os
+import re
 import subprocess
+import sys
 from datetime import datetime
-import simplejson as json
 from collections import OrderedDict
+
+import urllib.error
+import urllib.parse
+import urllib.request
+import simplejson as json
 
 EMAIL_RE = re.compile(r"^(\"?)(?P<name>.*)\1\s+<(?P<email>.*)>$")
 
