@@ -39,12 +39,14 @@ DIFF_TREE_RE = re.compile(r" \
 EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
 ZEROS = '0000000000000000000000000000000000000000'
 
+
 def git(args):
     args = ['git'] + args
     cmd = subprocess.Popen(args, stdout=subprocess.PIPE)
     details = cmd.stdout.read()
     details = details.decode('utf-8', 'replace').strip()
     return details
+
 
 def _git_config():
     raw_config = git(['config', '-l', '-z'])
@@ -55,10 +57,13 @@ def _git_config():
     items = [item.partition("\n")[0:3:2] for item in items]
     return OrderedDict(items)
 
+
 GIT_CONFIG = _git_config()
+
 
 def get_config(key, default=None):
     return GIT_CONFIG.get(key, default)
+
 
 def get_repo_name():
     if get_config('core.bare', 'false') == 'true':
@@ -69,6 +74,7 @@ def get_repo_name():
 
     # Fallback:
     return os.path.basename(os.getcwd())
+
 
 def get_repo_description():
     description = get_config('meta.description')
@@ -95,6 +101,7 @@ def extract_name_email(s):
     email = (_.group('email') or '').strip()
     return (name, email)
 
+
 def get_repo_owner():
     # Explicit keys
     repo_owner_name = get_config('meta.ownername')
@@ -110,7 +117,8 @@ def get_repo_owner():
     # Fallback to the repo
     if repo_owner_name is None or repo_owner_email is None:
         # You cannot include -n1 because it is processed before --reverse
-        logmsg = git(['log', '--reverse', '--format=%an%x09%ae']).split("\n")[0]
+        logmsg = git(['log', '--reverse', '--format=%an%x09%ae']
+                     ).split("\n")[0]
         # These will never be null
         (name, email) = logmsg.split("\t")
         if repo_owner_name is None:
@@ -120,13 +128,15 @@ def get_repo_owner():
 
     return (repo_owner_name, repo_owner_email)
 
+
 POST_URL = get_config('hooks.webhookurl')
 POST_URLS = get_config('hooks.webhookurls')
 POST_USER = get_config('hooks.authuser')
 POST_PASS = get_config('hooks.authpass')
 POST_REALM = get_config('hooks.authrealm')
 POST_SECRET_TOKEN = get_config('hooks.secrettoken')
-POST_CONTENTTYPE = get_config('hooks.webhook-contenttype', 'application/x-www-form-urlencoded')
+POST_CONTENTTYPE = get_config(
+    'hooks.webhook-contenttype', 'application/x-www-form-urlencoded')
 POST_TIMEOUT = get_config('hooks.timeout')
 DEBUG = get_config('hooks.webhook-debug')
 REPO_URL = get_config('meta.url')
@@ -139,6 +149,7 @@ if COMPARE_URL is None and REPO_URL is not None:
 REPO_NAME = get_repo_name()
 REPO_DESC = get_repo_description()
 (REPO_OWNER_NAME, REPO_OWNER_EMAIL) = get_repo_owner()
+
 
 def get_revisions(old, new, head_commit=False):
     # pylint: disable=R0914,R0912
@@ -160,7 +171,8 @@ def get_revisions(old, new, head_commit=False):
         lines = sections[s].split('\n')
 
         # first line is 'commit HASH\n'
-        props = {'id': lines[0].strip().split(' ')[1], 'added': [], 'removed': [], 'modified': []}
+        props = {'id': lines[0].strip().split(
+            ' ')[1], 'added': [], 'removed': [], 'modified': []}
 
         # call git diff-tree and get the file changes
         output = git(['diff-tree', '-r', '-C', '%s' % props['id']])
@@ -170,13 +182,13 @@ def get_revisions(old, new, head_commit=False):
             item = i.groupdict()
             if item['status'] == 'A':      # addition of a file
                 props['added'].append(item['file1'])
-            elif item['status'][0] == 'C': # copy of a file into a new one
+            elif item['status'][0] == 'C':  # copy of a file into a new one
                 props['added'].append(item['file2'])
             elif item['status'] == 'D':    # deletion of a file
                 props['removed'].append(item['file1'])
             elif item['status'] == 'M':    # modification of the contents or mode of a file
                 props['modified'].append(item['file1'])
-            elif item['status'][0] == 'R': # renaming of a file
+            elif item['status'][0] == 'R':  # renaming of a file
                 props['removed'].append(item['file1'])
                 props['added'].append(item['file2'])
             elif item['status'] == 'T':    # change in the type of the file
@@ -184,8 +196,8 @@ def get_revisions(old, new, head_commit=False):
             else:   # Covers U (file is unmerged)
                     # and X ("unknown" change type, usually an error)
                 pass    # When we get X, we do not know what actually happened so
-                        # it's safest just to ignore it. We shouldn't be seeing U
-                        # anyway, so we can ignore that too.
+                # it's safest just to ignore it. We shouldn't be seeing U
+                # anyway, so we can ignore that too.
 
         # read the header
         for l in lines[1:]:
@@ -194,10 +206,12 @@ def get_revisions(old, new, head_commit=False):
 
         # read the commit message
         # Strip leading tabs/4-spaces on the message
-        props['message'] = re.sub(r'^(\t| {4})', '', sections[s+1], 0, re.MULTILINE)
+        props['message'] = re.sub(
+            r'^(\t| {4})', '', sections[s + 1], 0, re.MULTILINE)
 
         # use github time format
-        basetime = datetime.strptime(props['date'][:-6], "%a %b %d %H:%M:%S %Y")
+        basetime = datetime.strptime(
+            props['date'][:-6], "%a %b %d %H:%M:%S %Y")
         tzstr = props['date'][-5:]
         props['date'] = basetime.strftime('%Y-%m-%dT%H:%M:%S') + tzstr
 
@@ -218,6 +232,7 @@ def get_revisions(old, new, head_commit=False):
         s += 2
 
     return revisions
+
 
 def get_base_ref(commit, ref):
     branches = git(['branch', '--contains', commit]).split('\n')
@@ -247,6 +262,8 @@ def get_base_ref(commit, ref):
     return base_ref
 
 # http://stackoverflow.com/a/20559031
+
+
 def purify(obj):
     if hasattr(obj, 'items'):
         newobj = type(obj)()
@@ -261,6 +278,7 @@ def purify(obj):
     else:
         return obj
     return type(obj)(newobj)
+
 
 def make_json(old, new, ref):
     # Lots more fields could be added
@@ -281,9 +299,9 @@ def make_json(old, new, ref):
             'owner': {
                 'name': REPO_OWNER_NAME,
                 'email': REPO_OWNER_EMAIL
-                }
             }
         }
+    }
 
     revisions = get_revisions(old, new)
     commits = []
@@ -310,6 +328,7 @@ def make_json(old, new, ref):
 
     return json.dumps(data)
 
+
 def post_encode_data(contenttype, rawdata):
     if contenttype == 'application/json':
         return rawdata.encode('UTF-8')
@@ -318,6 +337,7 @@ def post_encode_data(contenttype, rawdata):
 
     assert False, "Unsupported data encoding"
     return None
+
 
 def build_handler(realm, url, user, passwd):
     # Default handler
@@ -331,6 +351,7 @@ def build_handler(realm, url, user, passwd):
     if realm:
         handlerfunc = urllib.request.HTTPDigestAuthHandler
     return handlerfunc(password_mgr)
+
 
 def post(url, data):
     headers = {
@@ -359,6 +380,7 @@ def post(url, data):
         errmsg = "POST to %s returned error code %s." % (url, str(error.code))
         print(errmsg, file=sys.stderr)
 
+
 def main(lines):
     for line in lines:
         old, new, ref = line.strip().split(' ')
@@ -372,6 +394,7 @@ def main(lines):
             urls.extend(re.split(r',\s*', POST_URLS))
         for url in urls:
             post(url.strip(), data)
+
 
 if __name__ == '__main__':
     main(sys.stdin)
