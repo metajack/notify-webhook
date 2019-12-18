@@ -128,7 +128,7 @@ if REPO_OWNER_NAME is None or REPO_OWNER_EMAIL is None:
         REPO_OWNER_EMAIL = email
 
 def get_revisions(old, new, head_commit=False):
-    if re.match("^0+$", old):
+    if re.match(r"^0+$", old):
         commit_range = '%s..%s' % (EMPTY_TREE_HASH, new)
     else:
         commit_range = '%s..%s' % (old, new)
@@ -203,7 +203,7 @@ def get_revisions(old, new, head_commit=False):
 
 def get_base_ref(commit, ref):
     branches = git(['branch', '--contains', commit]).split('\n')
-    CURR_BRANCH_RE = re.compile('^\* \w+$')
+    CURR_BRANCH_RE = re.compile(r'^\* \w+$')
     curr_branch = None
 
     if len(branches) > 1:
