@@ -5,8 +5,6 @@ import urllib.request, urllib.parse, urllib.error
 import re
 import os
 import subprocess
-import csv
-import io
 from datetime import datetime
 import simplejson as json
 from collections import OrderedDict
@@ -359,11 +357,9 @@ def main(lines):
         if POST_URL:
             urls.append(POST_URL)
         if POST_URLS:
-            urls = io.StringIO(POST_URLS)
-            urls.extend(csv.reader(urls))
-        if urls:
-            for url in urls:
-                post(url.strip(), data)
+            urls.extend(re.split(r',\s*', POST_URLS))
+        for url in urls:
+            post(url.strip(), data)
 
 if __name__ == '__main__':
     main(sys.stdin)
