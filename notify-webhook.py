@@ -37,6 +37,7 @@ DIFF_TREE_RE = re.compile(r" \
         $", re.MULTILINE | re.VERBOSE)
 
 EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
+ZEROS = '0000000000000000000000000000000000000000'
 
 def git(args):
     args = ['git'] + args
@@ -141,8 +142,12 @@ REPO_DESC = get_repo_description()
 
 def get_revisions(old, new, head_commit=False):
     # pylint: disable=R0914,R0912
-    if re.match(r"^0+$", old):
+    if old == ZEROS:
+        # ref creation
         commit_range = '%s..%s' % (EMPTY_TREE_HASH, new)
+    elif new == ZEROS:
+        # ref deletion
+        commit_range = '%s..%s' % (old, EMPTY_TREE_HASH)
     else:
         commit_range = '%s..%s' % (old, new)
 
