@@ -140,6 +140,7 @@ REPO_DESC = get_repo_description()
 (REPO_OWNER_NAME, REPO_OWNER_EMAIL) = get_repo_owner()
 
 def get_revisions(old, new, head_commit=False):
+    # pylint: disable=R0914,R0912
     if re.match(r"^0+$", old):
         commit_range = '%s..%s' % (EMPTY_TREE_HASH, new)
     else:
