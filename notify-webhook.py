@@ -11,7 +11,7 @@ from datetime import datetime
 import simplejson as json
 from collections import OrderedDict
 
-EMAIL_RE = re.compile("^\"?(.*)\"? <(.*)>$")
+EMAIL_RE = re.compile(r"^(\"?)(?P<name>.*)\1\s+<(?P<email>.*)>$")
 DIFF_TREE_RE = re.compile("^:(?P<src_mode>[0-9]{6}) (?P<dst_mode>[0-9]{6}) (?P<src_hash>[0-9a-f]{7,40}) (?P<dst_hash>[0-9a-f]{7,40}) (?P<status>[ADMTUX]|[CR][0-9]{1,3})\s+(?P<file1>\S+)(?:\s+(?P<file2>\S+))?$", re.MULTILINE)
 EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
 
@@ -50,12 +50,12 @@ def extract_name_email(s):
     _ = p.search(s.strip())
     if _ is None:
         return (None, None)
-    name = _.group(1)
+    name = _.group('name')
     if name is not None:
         name = name.strip()
         if len(name) <= 0:
             name = None
-    email = _.group(2)
+    email = _.group('email')
     if email is not None:
         email = email.strip()
         if len(email) <= 0:
