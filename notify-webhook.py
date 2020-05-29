@@ -371,7 +371,8 @@ def post(url, data):
     postdata = post_encode_data(POST_CONTENTTYPE, data)
 
     if POST_SECRET_TOKEN is not None:
-        hmacobj = hmac.new(POST_SECRET_TOKEN, postdata, hashlib.sha1)
+        secret_bytes = str(POST_SECRET_TOKEN).encode('utf-8', 'strict')
+        hmacobj = hmac.new(secret_bytes, postdata, hashlib.sha1)
         signature = 'sha1=' + hmacobj.hexdigest()
         headers['X-Hub-Signature'] = signature
 
