@@ -228,8 +228,8 @@ def get_revisions(old, new, head_commit=False):
         # split up author
         m = EMAIL_RE.match(props['author'])
         if m:
-            props['name'] = m.group(1)
-            props['email'] = m.group(2)
+            props['name'] = m.group(2)
+            props['email'] = m.group(3)
         else:
             props['name'] = 'unknown'
             props['email'] = 'unknown'
