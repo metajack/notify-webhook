@@ -14,7 +14,7 @@ sends commit notifications to XMPP group chat rooms.
 
 ## Dependencies
 
-* [simplejson](http://pypi.python.org/pypi/simplejson)
+* [Python 3.6+](http://python.org/downloads)
 
 ## Usage
 ### Installation & Configuration (manual)

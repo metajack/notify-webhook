@@ -12,7 +12,7 @@ from collections import OrderedDict
 import urllib.error
 import urllib.parse
 import urllib.request
-import simplejson as json
+import json
 
 EMAIL_RE = re.compile(r"^(\"?)(?P<name>.*)\1\s+<(?P<email>.*)>$")
 
